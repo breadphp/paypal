@@ -1,0 +1,31 @@
+{
+	"name" : "bread/paypal",
+	"description" : "PayPal payments",
+	"type" : "library",
+	"authors" : [{
+			"name" : "Giovanni Lovato",
+			"email" : "giovanni.lovato@saiv.it",
+			"homepage" : "http://www.saiv.it/",
+			"role" : "System Project Manager"
+		}, {
+			"name" : "Alex Tomasello",
+			"email" : "alex.tomasello@saiv.it"
+		}
+	],
+	"keywords" : [
+		"bread",
+		"paypal"
+	],
+	"homepage" : "https://github.com/breadphp/paypal",
+	"license" : "CC-BY-3.0",
+	"require" : {
+		"php" : ">=5.5",
+		"bread/rest" : ">=0.6",
+		"paypal/rest-api-sdk-php" : "*"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Bread\\PayPal\\" : "src"
+		}
+	}
+}
