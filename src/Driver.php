@@ -9,7 +9,7 @@ use Bread\Types\DateTime;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Amount;
-use PayPal\Api\CreditCard;
+use PayPal\Api\CreditCard as PayPalCreditCard;
 use PayPal\Api\CreditCardToken;
 use PayPal\Api\Details;
 use PayPal\Api\FundingInstrument;
@@ -94,7 +94,29 @@ class Driver
         $itemList->setItems(array($items));
 
         $payer = new PayPalPayer();
-        $payer->setPaymentMethod($payment->payer->paymentMethod);
+
+        switch ($payment->payer->paymentMethod) {
+            case Payer::PAYMENT_CREDIT_CARD:
+                $payer->setPaymentMethod($payment->payer->paymentMethod);
+                $card = new PayPalCreditCard();
+                $card->setType($payment->payer->creditCard->type)
+                    ->setNumber($payment->payer->creditCard->number)
+                    ->setExpireMonth($payment->payer->creditCard->expireMonth)
+                    ->setExpireYear($payment->payer->creditCard->expireYear)
+                    ->setCvv2($payment->payer->creditCard->cvv2)
+                    ->setFirstName($payment->payer->creditCard->firstName)
+                    ->setLastName($payment->payer->creditCard->lastName);
+                $fi = new FundingInstrument();
+                $fi->setCreditCard($card);
+                $payer->setFundingInstruments(array($fi));
+                break;
+            case Payer::PAYMENT_PAYPAL:
+                $payer->setPaymentMethod($payment->payer->paymentMethod);
+                break;
+        }
+
+
+
         $amount = new Amount();
         $amount->setCurrency($currency);
         $amount->setTotal($total);

@@ -38,4 +38,12 @@ class Payer extends REST\Model
 
     protected $status; //Status of the payer’s PayPal account. Only supported when the payment_method is set to paypal. Allowed values: VERIFIED or UNVERIFIED.
 
+    protected $creditCard; //A resource representing a credit card that can be used to fund a payment.
+
 }
+
+Configuration::defaults('Bread\PayPal\Payer', array(
+    'creditCard' => array(
+        'type' => 'Bread\PayPal\CreditCard'
+    )
+));
