@@ -3,6 +3,7 @@ namespace Bread\PayPal;
 
 use Bread\Configuration\Manager as Configuration;
 use Bread\Promises\Deferred;
+use Bread\Promises\When;
 use Bread\Storage\Collection;
 use Bread\Types\DateTime;
 
@@ -87,11 +88,12 @@ class Driver
                 ->setSku($item->sku)
                 ->setPrice($item->price);
             $items[] = $tmpItem;
-            $total += (float) $item->price;
+            //
+            $total = $item->price;
             $currency = $item->currency;
         }
         $itemList = new ItemList();
-        $itemList->setItems(array($items));
+        $itemList->setItems($items);
 
         $payer = new PayPalPayer();
 
@@ -128,7 +130,7 @@ class Driver
 
         $redirectUrls = new RedirectUrls();
         $redirectUrls->setReturnUrl($payment->returnUrl);
-        $redirectUrls->setCancelUrl($payment->canelUrl);
+        $redirectUrls->setCancelUrl($payment->cancelUrl);
 
         $paypalPayment = new PayPalPayment();
         $paypalPayment->setRedirectUrls($redirectUrls);
@@ -138,14 +140,14 @@ class Driver
 
         try {
             $paypalPayment->create(static::getApiContext($domain));
-            return static::getPayment($paypalPayment->getId(), $domain)->then(function ($payment) {
-                $payment->approvalUrl = static::getLink($payment->getLinks(), "approval_url");
+            return static::getPayment($paypalPayment->getId(), $domain)->then(function ($payment) use($paypalPayment) {
+                $payment->approvalUrl = static::getLink($paypalPayment->getLinks(), "approval_url");
                 return $payment;
             });
         } catch (PayPalConnectionException $e) {
-            return When::reject($e->getMessage());
+            return When::reject($e);
         } catch (PayPalInvalidCredentialException $e) {
-            return When::reject($e->getMessage());
+            return When::reject($e);
         }
     }
 
@@ -157,7 +159,7 @@ class Driver
             $payment->execute($paymentExecution, static::getApiContext($domain));
             return static::getPayment($payment->getId(), $domain);
         } catch (PayPalConnectionException $exception) {
-            return When::reject($exception->getMessage());
+            return When::reject($exception);
         }
     }
 
@@ -184,7 +186,7 @@ class Driver
     protected static function getApiContext($domain) {
         $clientID = Configuration::get(Payment::class, 'api.clientId', $domain);
         $clientSecret = Configuration::get(Payment::class, 'api.clienteSecret', $domain);
-        $api = new ApiContext(new OAuthTokenCredential($clientID,$clientSecret));
+        $api = new ApiContext(new OAuthTokenCredential($clientID, $clientSecret));
         /*
         $api->setConfig(array(
             'mode' => 'sandbox',

@@ -1,6 +1,7 @@
 <?php
 namespace Bread\PayPal;
 
+use Bread\Configuration\Manager as Configuration;
 use Bread\REST;
 
 class Payer extends REST\Model

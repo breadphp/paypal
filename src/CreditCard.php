@@ -9,6 +9,12 @@ class CreditCard extends REST\Model
     const STATE_OK = 'ok';
     const STATE_EXPIRED = 'expired';
 
+    const TYPE_VISA = 'visa';
+    const TYPE_MASTERCARD = 'mastercard';
+    const TYPE_AMEX = 'amex';
+    const TYPE_DISCOVER = 'discover';
+    const TYPE_MAESTRO = 'maestro';
+
     protected $id; //ID of the credit card being saved for later use. Assigned in response.
 
     protected $number; //Card number. Required.

@@ -41,6 +41,21 @@ class Payment extends REST\Model
 
     protected $approvalUrl;
 
+    public function preparePayment($domain)
+    {
+        return Driver::preparePayment($this, $domain);
+    }
+
+    public static function executePayment($paymentId, $payerId, $domain)
+    {
+        return Driver::executePayment($paymentId, $payerId, $domain);
+    }
+
+    public static function getPayment($id, $domain)
+    {
+        return Driver::getPayment($id, $domain);
+    }
+
 }
 
 Configuration::defaults('Bread\PayPal\Payment', array(
