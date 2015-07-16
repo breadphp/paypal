@@ -89,14 +89,13 @@ class Driver
                 ->setPrice($item->price);
             $items[] = $tmpItem;
             //
-            $total = $item->price;
+            $total += (float) $item->price;
             $currency = $item->currency;
         }
         $itemList = new ItemList();
         $itemList->setItems($items);
 
         $payer = new PayPalPayer();
-
         switch ($payment->payer->paymentMethod) {
             case Payer::PAYMENT_CREDIT_CARD:
                 $payer->setPaymentMethod($payment->payer->paymentMethod);
@@ -116,8 +115,6 @@ class Driver
                 $payer->setPaymentMethod($payment->payer->paymentMethod);
                 break;
         }
-
-
 
         $amount = new Amount();
         $amount->setCurrency($currency);
