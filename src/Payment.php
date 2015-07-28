@@ -46,6 +46,10 @@ class Payment extends REST\Model
         return Driver::preparePayment($this, $domain);
     }
 
+    public function createInvoice($domain) {
+        return Driver::createInvoice($this, $domain);
+    }
+
     public static function executePayment($paymentId, $payerId, $domain)
     {
         return Driver::executePayment($paymentId, $payerId, $domain);
@@ -55,6 +59,7 @@ class Payment extends REST\Model
     {
         return Driver::getPayment($id, $domain);
     }
+
 
 }
 

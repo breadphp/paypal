@@ -41,6 +41,8 @@ class Payer extends REST\Model
 
     protected $creditCard; //A resource representing a credit card that can be used to fund a payment.
 
+    protected $company;
+
 }
 
 Configuration::defaults('Bread\PayPal\Payer', array(

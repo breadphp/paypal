@@ -9,18 +9,29 @@ use Bread\Types\DateTime;
 
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Api\Address;
 use PayPal\Api\Amount;
+use PayPal\Api\BillingInfo;
+use PayPal\Api\Cost;
 use PayPal\Api\CreditCard as PayPalCreditCard;
 use PayPal\Api\CreditCardToken;
+use PayPal\Api\Currency;
 use PayPal\Api\Details;
 use PayPal\Api\FundingInstrument;
+use PayPal\Api\Invoice;
+use PayPal\Api\InvoiceAddress;
+use PayPal\Api\InvoiceItem;
 use PayPal\Api\Item as PayPalItem;
 use PayPal\Api\ItemList;
+use PayPal\Api\MerchantInfo;
 use PayPal\Api\OpenIdTokeninfo;
 use PayPal\Api\OpenIdUserinfo;
 use PayPal\Api\Payer as PayPalPayer;
 use PayPal\Api\Payment as PayPalPayment;
 use PayPal\Api\PaymentExecution;
+use PayPal\Api\PaymentTerm;
+use PayPal\Api\Phone;
+use PayPal\Api\ShippingInfo;
 use PayPal\Api\Transaction;
 use PayPal\Api\RedirectUrls;
 use PayPal\Exception\PayPalConnectionException;
@@ -29,7 +40,8 @@ use PayPal\Exception\PayPalInvalidCredentialException;
 class Driver
 {
 
-    public static function getPayment($id, $domain) {
+    public static function getPayment($id, $domain)
+    {
         $deferred = new Deferred();
         try {
             $paypalPayment = PayPalPayment::get($id, static::getApiContext($domain));
@@ -54,18 +66,16 @@ class Driver
                 'phone' => $paypalPayer->getPayerInfo()->getPhone()
             ));
             foreach ($paypalPayment->getTransactions() as $transaction) {
-                foreach ($transaction->getItemList() as $itemlist) {
-                    foreach ($itemlist->getItems() as $item){
-                        $payment->items->append(new Item(array(
-                            'quantity' => $item->getQuantity(),
-                            'name' => $item->getName(),
-                            'description' => $item->getDescription(),
-                            'price' => $item->getPrice(),
-                            'tax' => $item->getTax(),
-                            'currency' => $item->getCurrency(),
-                            'sku' => $item->getSku()
-                        )));
-                    }
+                foreach ($transaction->getItemList()->getItems() as $item) {
+                    $payment->items->append(new Item(array(
+                        'quantity' => $item->getQuantity(),
+                        'name' => $item->getName(),
+                        'description' => $item->getDescription(),
+                        'price' => $item->getPrice(),
+                        'tax' => $item->getTax(),
+                        'currency' => $item->getCurrency(),
+                        'sku' => $item->getSku()
+                    )));
                 }
             }
             return $deferred->resolve($payment);
@@ -76,7 +86,8 @@ class Driver
         }
     }
 
-    public static function preparePayment($payment, $domain) {
+    public static function preparePayment($payment, $domain)
+    {
         $items = array();
         $currency = null;
         $total = 0;
@@ -148,7 +159,8 @@ class Driver
         }
     }
 
-    public static function executePayment($paymentId, $payerId, $domain) {
+    public static function executePayment($paymentId, $payerId, $domain)
+    {
         $payment = static::getPaymentDetails($paymentId, $domain);
         $paymentExecution = new PaymentExecution();
         $paymentExecution->setPayerId($payerId);
@@ -160,7 +172,62 @@ class Driver
         }
     }
 
-    protected function getLink(array $links, $type) {
+    /*
+    public static function createInvoice($payment, $domain)
+    {
+        $invoice = new Invoice();
+        $invoice
+            ->setMerchantInfo(new MerchantInfo())
+            ->setBillingInfo(array(new BillingInfo()))
+            ->setPaymentTerm(new PaymentTerm())
+            ->setShippingInfo(new ShippingInfo());
+        $invoice->getMerchantInfo()
+            ->setEmail('alex.tomasello@saiv.it')
+            ->setFirstName('SAIV')
+            ->setLastName('BEST Hotspot')
+            ->setbusinessName('SAIV S.p.A.');
+//             ->setPhone(new Phone());
+//         $invoice->getMerchantInfo()->getPhone()
+//             ->setNationalNumber($payment->payer->phone);
+        $billing = $invoice->getBillingInfo();
+        $billing[0]
+            ->setEmail($payment->payer->mail);
+        $billing[0]
+            ->setBusinessName($payment->payer->firstName);
+        $items = array();
+        foreach ($payment->items as $item) {
+            $tmpItem = new InvoiceItem();
+            $tmpItem->setName($item->name)
+                ->setQuantity((int) $item->quantity)
+                ->setUnitPrice(new Currency());
+            $tmpItem->getUnitPrice()
+                ->setCurrency($item->currency)
+                ->setValue($item->price);
+            $items[] = $tmpItem;
+        }
+        $invoice->setItems($items);
+        $invoice->getShippingInfo()
+            ->setFirstName($payment->payer->firstName)
+            ->setLastName($payment->payer->lastName)
+            ->setbusinessName($payment->payer->company);
+//             ->setPhone(new Phone());
+//         $invoice->getShippingInfo()->getPhone()
+//             ->setNationalNumber($payment->payer->phone);
+        $invoice->getPaymentTerm()
+            ->setTermType("NET_45");
+//         $invoice->setLogoUrl('https://saiv.best.saiv.it:3443/images/SAIV-logo+sphere-40px.png');
+        try {
+        $invoice->create(static::getApiContext($domain));
+        return $invoice->send(static::getApiContext($domain));
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
+            var_dump($e->getData());
+        }
+    }
+    */
+
+    protected function getLink(array $links, $type)
+    {
         foreach($links as $link) {
             if($link->getRel() == $type) {
                 return $link->getHref();
@@ -176,11 +243,13 @@ class Driver
      *
      * @return Payment
      */
-    protected static function getPaymentDetails($paymentId, $domain) {
+    protected static function getPaymentDetails($paymentId, $domain)
+    {
         return PayPalPayment::get($paymentId, static::getApiContext($domain));
     }
 
-    protected static function getApiContext($domain) {
+    protected static function getApiContext($domain)
+    {
         $clientID = Configuration::get(Payment::class, 'api.clientId', $domain);
         $clientSecret = Configuration::get(Payment::class, 'api.clienteSecret', $domain);
         $api = new ApiContext(new OAuthTokenCredential($clientID, $clientSecret));
