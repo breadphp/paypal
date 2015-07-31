@@ -161,6 +161,9 @@ class Driver
 
     public static function executePayment($paymentId, $payerId, $domain)
     {
+        if (!$paymentId || !$payerId) {
+            return When::reject("PaymentID or PayerID invalid");
+        }
         $payment = static::getPaymentDetails($paymentId, $domain);
         $paymentExecution = new PaymentExecution();
         $paymentExecution->setPayerId($payerId);
