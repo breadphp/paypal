@@ -253,19 +253,19 @@ class Driver
 
     protected static function getApiContext($domain)
     {
-        $clientID = Configuration::get(Payment::class, 'api.clientId', $domain);
-        $clientSecret = Configuration::get(Payment::class, 'api.clienteSecret', $domain);
+        //{live, $sandbox}
+        $mode = Configuration::get(Payment::class, 'api.mode', $domain);
+        $clientID = Configuration::get(Payment::class, "api.{$mode}.clientId", $domain);
+        $clientSecret = Configuration::get(Payment::class, "api.{$mode}.clientSecret", $domain);
         $api = new ApiContext(new OAuthTokenCredential($clientID, $clientSecret));
-        /*
         $api->setConfig(array(
-            'mode' => 'sandbox',
-            'log.LogEnabled' => true,
-            'log.FileName' => '../PayPal.log',
-            'log.LogLevel' => 'DEBUG', // PLEASE USE `FINE` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
-            'validation.level' => 'log',
+            'mode' => $mode,
+//             'log.LogEnabled' => true,
+//             'log.FileName' => '../PayPal.log',
+//             'log.LogLevel' => 'DEBUG', // PLEASE USE `FINE` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
+//             'validation.level' => 'log',
             'cache.enabled' => true
         ));
-        */
         return $api;
     }
 
